@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Logic Mirror</title>
+    <style>
+        :root { --primary: #8e44ad; --bg: #f4f7f6; --card: #ffffff; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        .container { width: 100%; max-width: 650px; }
+        
+        .search-box { background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); text-align: center; }
+        .search-box h2 { margin-top: 0; color: #2c3e50; }
+        input { width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1.1rem; margin-bottom: 20px; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        button:hover { background: #732d91; }
+        
+        #loading { display: none; text-align: center; margin-top: 30px; font-weight: bold; color: #7f8c8d; }
+        .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(142, 68, 173, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-bottom: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #results { margin-top: 30px; display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .result-group { background: var(--card); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .result-group h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #2c3e50; }
+        
+        .video-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0f0f0; text-decoration: none; color: inherit; }
+        .video-item:last-of-type { border-bottom: none; }
+        .play-icon { font-size: 1.8rem; margin-top: 2px; }
+        .video-details strong { display: block; font-size: 1.1rem; margin-bottom: 5px; }
+        .video-details p { margin: 0 0 8px 0; font-size: 0.9rem; color: #666; }
+        
+        .reasoning-box { background: #f8f9fa; border-left: 4px solid #8e44ad; padding: 12px 15px; margin-top: 10px; font-size: 0.85rem; color: #555; border-radius: 0 8px 8px 0; }
+        .reasoning-label { color: #8e44ad; font-weight: bold; display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="search-box">
+            <h2>AI-Powered Discovery Engine</h2>
+            <input type="text" id="userInput" placeholder="What would you like to learn or watch?" onkeypress="handleKeyPress(event)">
+            <button onclick="processSearch()">Generate Live AI Recommendations</button>
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Consulting the AI to generate dynamic pathways...</div>
+        </div>
+
+        <div id="results">
+            <div class="result-group">
+                <h3>Dynamic Algorithmic Recommendations</h3>
+                <div id="recList"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') processSearch();
+    }
+
+    async function processSearch() {
+        const query = document.getElementById('userInput').value.trim();
+        
+        if (!query) {
+            alert("Please enter a topic to search.");
+            return;
+        }
+
+        // UI State: Loading
+        document.getElementById('results').style.display = "none";
+        document.getElementById('loading').style.display = "block";
+
+        try {
+            // Call YOUR backend instead of Google directly
+            const response = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
+
+            if (!response.ok) {
+                throw new Error("Server returned an error");
+            }
+
+            const recommendations = await response.json();
+            
+            // Rendering the UI
+            renderRecommendations(recommendations);
+
+        } catch (error) {
+            console.error(error);
+            alert("Error communicating with the server. Please try again.");
+            document.getElementById('loading').style.display = "none";
+        }
+    }
+
+    function renderRecommendations(recommendations) {
+        const recList = document.getElementById('recList');
+        recList.innerHTML = "";
+
+        recommendations.forEach(rec => {
+            const recUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(rec.title)}`;
+            
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <a href="${recUrl}" target="_blank" class="video-item">
+                    <span class="play-icon">🧠</span>
+                    <div class="video-details">
+                        <strong>${rec.title}</strong>
+                        <p>${rec.desc}</p>
+                    </div>
+                </a>
+                <div class="reasoning-box">
+                    <span class="reasoning-label">AI Logic Core</span>
+                    ${rec.logic}
+                </div>
+            `;
+            recList.appendChild(div);
+        });
+
+        document.getElementById('loading').style.display = "none";
+        document.getElementById('results').style.display = "block";
+    }
+</script>
+</body>
+</html>
